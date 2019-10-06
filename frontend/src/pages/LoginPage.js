@@ -37,6 +37,10 @@ class LoginPage extends Component {
         }
     }
 
+    redirectToRegisterPage() {
+        return <Redirect to="/register" />
+    }
+
     render() {
         if(this.state.redirect) {
             return <Redirect to="/dashboard" />
@@ -60,6 +64,7 @@ class LoginPage extends Component {
                                     </Card.Body>
                                     <Card.Footer>
                                         <Button block variant="primary" onClick={() => context.handleLogin(this.state)}>Login</Button>
+                                        <Button block variant="secondary" onClick={() => this.redirectToRegisterPage()}>Register</Button>
                                     </Card.Footer>
                                 </Card>
                             </Col>
