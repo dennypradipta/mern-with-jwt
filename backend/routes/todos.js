@@ -49,6 +49,7 @@ router.post('/add', auth.getUserData, async function (req, res) {
     // .catch(err => { console.log(err, "err"); return res.status(400).send(err) });
   } catch (err) {
     console.log(err, 'Error in adding task\n');
+    return res.status(400).send(err)
   }
 });
 
