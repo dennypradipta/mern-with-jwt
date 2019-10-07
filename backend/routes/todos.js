@@ -2,11 +2,25 @@ var express = require('express');
 var router = express.Router();
 
 var Todo = require('../models/task');
+const auth = require('../middleware/auth');
+
+
+router.delete('/delete/:id', function (req, res) {
+  try {
+    Todo.deleteOne({ _id: req.params.id }, (err, todo) => {
+      if (err) res.status(400).send(err);
+      res.json(todo);
+    });
+  } catch (err) {
+    console.log('Error in deleting data\n', err);
+  }
+});
+
 
 /* GET home page. */
-router.get('/', function(req, res) {
+router.get('/', auth.getUserData, function (req, res) {
   try {
-    Todo.find((err, todos) => {
+    Todo.find({ username: req.username }, (err, todos) => {
       if (err) res.status(400).send(err);
       res.json(todos);
     });
@@ -15,7 +29,7 @@ router.get('/', function(req, res) {
   }
 });
 
-router.get('/:id', function(req, res) {
+router.get('/:id', function (req, res) {
   try {
     Todo.findById(req.params.id, (err, todo) => {
       if (err) res.status(400).send(err);
@@ -26,19 +40,19 @@ router.get('/:id', function(req, res) {
   }
 });
 
-router.post('/add', function(req, res) {
+router.post('/add', auth.getUserData, async function (req, res) {
   try {
-    let todo = new Todo(req.body);
-    todo
-      .save()
-      .then(todo => res.status(200).send(todo))
-      .catch(err => res.status(400).send(err));
+    let todo = new Todo({ task: req.body.task, username: req.username });
+    await todo.save()
+    return res.status(200).send(todo)
+    // .then(todo => res.status(200).send(todo))
+    // .catch(err => { console.log(err, "err"); return res.status(400).send(err) });
   } catch (err) {
-    console.log('Error in adding task\n', err);
+    console.log(err, 'Error in adding task\n');
   }
 });
 
-router.patch('edit/:id', function(req, res) {
+router.patch('/edit/:id', function (req, res) {
   try {
     Todo.findById(req.params.id, (err, todo) => {
       if (err) res.status(400);
@@ -53,14 +67,6 @@ router.patch('edit/:id', function(req, res) {
   }
 });
 
-router.delete('delete/:id', function(req, res) {
-  try {
-    Todo.deleteOne({ _id: req.params.id }, (err, todo) => {
-      if (err) res.status(400).send(err);
-    });
-  } catch (err) {
-    console.log('Error in deleting data\n', err);
-  }
-});
+
 
 module.exports = router;
