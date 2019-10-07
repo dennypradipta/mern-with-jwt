@@ -12,13 +12,13 @@ class UserProvider extends Component {
         super(props);
         this.state = {
             isLoggedIn: false,
-            
+
             name: null
         }
     }
 
     componentDidMount() {
-        if(cookies.get('token') !== null) {
+        if (cookies.get('token') !== null) {
             axios({
                 method: 'GET',
                 url: "http://localhost:3000/api/user/whoami",
@@ -72,7 +72,8 @@ class UserProvider extends Component {
                                 }
                             })
                             .catch(error => {
-                                alert(error.data.message);
+                                // return;
+                                alert(error.data && error.data.message);
                             })
                     },
                     handleLogout: data => {

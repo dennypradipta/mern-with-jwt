@@ -43,6 +43,7 @@ router.post('/login', (req, res) => {
 
 		if (user) {
 			user.comparePassword(req.body.password, (err, isMatch) => {
+				console.log(err, req.body.password, isMatch, "isMatch")
 				if (err) throw err;
 
 				if (isMatch) {
@@ -72,6 +73,8 @@ router.post('/login', (req, res) => {
 				result: {}
 			})
 		}
+
+
 	});
 });
 
@@ -88,7 +91,7 @@ router.get('/whoami', auth.isAuthenticated, (req, res) => {
 		req.headers['x-access-token'] ||
 		req.cookies.token;
 
-	if(token) {
+	if (token) {
 		let data = jwtdecode(token);
 		res.status(200).json({
 			success: true,
