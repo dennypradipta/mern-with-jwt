@@ -131,10 +131,46 @@ class TodoPage extends Component {
 
     }
 
-    _viewTask = (task, _id) => {
+    async markAsDone(id, value) {
+            try {
+                const response = await Axios({
+                    method: 'PATCH',
+                    url: `http://localhost:3000/api/todo/markAsDone/${id}`,
+                    data: {
+                        done: value 
+                    },
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    withCredentials: true
+                });
+                const tasks = this.state.tasks.map((task) => {
+                    if (task._id === id) {
+                        return {
+                            ...task, 
+                            done: value
+                        }
+                    }
+                    return task;
+                });
+
+                this.setState({
+                    ...this.state,
+                    tasks: tasks
+                });
+            } catch (e) {
+                alert(e.message);
+                return;
+            }
+    }
+
+    _viewTask = (task, _id, done) => {
         return (
             <>
-                <Col onDoubleClick={() => { this.setState({ editable: _id, editableTask: task }) }} xs={8}>
+                <Col xs={2} className="todo-mark-as-done">
+                    <Form.Check type="checkbox" checked={done} name="markAsDone" onChange={(e) => {this.markAsDone(_id, e.target.checked)}}/>
+                </Col>
+                <Col className={done ? 'todo-done': ''} onDoubleClick={() => { this.setState({ editable: _id, editableTask: task }) }} xs={6}>
                     {task}
                 </Col>
                 <Col xs={4}>
@@ -193,12 +229,12 @@ class TodoPage extends Component {
                                                         </Row>
                                                     </Card>
                                                 </Col>
-                                                {this.state.tasks.map(({ task, _id }, index) => {
+                                                {this.state.tasks.map(({ task, _id, done }, index) => {
                                                     return (
                                                         <Col xs={12} className="text-left mt-1 mb-1" key={_id}>
                                                             <Card className="p-3">
                                                                 <Row className="align-items-center justify-content-center">
-                                                                    {this.state.editable === _id ? this._editTask(task, _id) : this._viewTask(task, _id)}
+                                                                    {this.state.editable === _id ? this._editTask(task, _id) : this._viewTask(task, _id, done)}
                                                                 </Row>
                                                             </Card>
                                                         </Col>
