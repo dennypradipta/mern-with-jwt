@@ -5,8 +5,9 @@ const todoSchema = new Schema({
   task: String,
   username: {
     type: String,
-    required: true
+    required: true,
   },
+  done: Boolean
 });
 
 module.exports = mongoose.model('Todo', todoSchema);

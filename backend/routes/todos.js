@@ -42,7 +42,10 @@ router.get('/:id', function (req, res) {
 
 router.post('/add', auth.getUserData, async function (req, res) {
   try {
-    let todo = new Todo({ task: req.body.task, username: req.username });
+    let todo = new Todo({ 
+      task: req.body.task, 
+      username: req.username, 
+      done: false });
     await todo.save()
     return res.status(200).send(todo)
     // .then(todo => res.status(200).send(todo))
@@ -65,6 +68,24 @@ router.patch('/edit/:id', function (req, res) {
     });
   } catch (err) {
     console.log('Error in updating task by ID\n', err);
+  }
+});
+
+router.patch('/markAsDone/:id', function(req, res) {
+  try {
+    Todo.findById(req.params.id, (err, todo) => {
+      if (err) res.status(400);
+      todo.done = req.body.done;
+      todo
+        .save()
+        .then(todo => res.status(200).json({
+          success: true, 
+          todo: todo
+        }))
+        .catch(err => res.status(400).send(err));
+    });
+  } catch (err) {
+    console.log('Error in marking as done. ', err);
   }
 });
 
