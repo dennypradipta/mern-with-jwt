@@ -21,12 +21,20 @@ router.post('/register', (req, res) => {
 	newUser.updated_at = new Date();
 
 	newUser.save(function (err, saved) {
+		try {
 		if (err) throw err.errmsg;
 
 		res.status(200).json({
 			success: true,
 			message: "Successfully registered",
 		})
+		}
+		catch(e) {
+			res.status(500).json({
+				success: false, 
+				message: "Something has gone wrong"
+			})
+		}
 	})
 });
 
