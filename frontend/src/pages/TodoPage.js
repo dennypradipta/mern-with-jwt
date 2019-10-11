@@ -5,10 +5,13 @@ import Col from "react-bootstrap/Col";
 import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 import { withRouter } from "react-router-dom";
+import Axios from "axios";
+
 
 import UserContext from "../contexts/User/UserContext";
 import ProtectedRoute from "../components/ProtectedRoute/ProtectedRoute"
 import Form from 'react-bootstrap/Form';
+
 
 class TodoPage extends Component {
     constructor(props) {
@@ -19,28 +22,175 @@ class TodoPage extends Component {
         }
     }
 
+    async componentDidMount() {
+        try {
+            const response = await Axios({
+                method: 'GET',
+                url: `http://localhost:3000/api/todo`,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                withCredentials: true
+            });
+            this.setState({
+                tasks: response.data
+            })
+        } catch (e) {
+            alert(e.message)
+        }
+    }
+
     handleChange(e) {
         this.setState({
             [e.target.name]: e.target.value
         });
     }
 
-    handleAddTask() {
+    async handleAddTask() {
         if (this.state.newTask !== "" && this.state.newTask !== null && this.state.newTask !== undefined && this.state.newTask.length > 0) {
-            let task = [...this.state.tasks, this.state.newTask];
-            this.setState({
-                tasks: task,
-                newTask: ""
-            });
+            try {
+                const response = await Axios({
+                    method: 'POST',
+                    url: "http://localhost:3000/api/todo/add",
+                    data: {
+                        task: this.state.newTask
+                    },
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    withCredentials: true
+                });
+                let task = [...this.state.tasks, response.data];
+                this.setState({
+                    tasks: task,
+                    newTask: ""
+                });
+            } catch (e) {
+                alert(e.message);
+                return;
+            }
+
         }
     }
 
-    handleDeleteTask(index) {
-        let tasks = this.state.tasks;
-        tasks.splice(index, 1);
-        this.setState({
-            tasks: tasks
-        });
+
+    async handleUpdateTask(id) {
+        if (this.state.editableTask !== "" && this.state.editableTask !== null && this.state.editableTask !== undefined && this.state.editableTask.length > 0) {
+            try {
+                const response = await Axios({
+                    method: 'PATCH',
+                    url: `http://localhost:3000/api/todo/edit/${id}`,
+                    data: {
+                        task: this.state.editableTask
+                    },
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    withCredentials: true
+                });
+                let task = this.state.tasks.map((task) => {
+                    if (task._id === id) {
+                        return {
+                            ...response.data,
+                        }
+                    }
+                    return task
+                })
+                this.setState({
+                    tasks: task,
+                    newTask: "",
+                    editable: "",
+                    editableTask: ""
+                });
+            } catch (e) {
+                alert(e.message);
+                return;
+            }
+
+        }
+    }
+
+    async handleDeleteTask(taskId) {
+        try {
+            const response = await Axios({
+                method: 'DELETE',
+                url: `http://localhost:3000/api/todo/delete/${taskId}`,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                withCredentials: true
+            });
+            let tasks = this.state.tasks.filter(({ _id }) => taskId !== _id);
+            this.setState({
+                tasks: tasks
+            });
+        } catch (e) {
+            alert(e.message);
+            return;
+        }
+
+    }
+
+    async markAsDone(id, value) {
+            try {
+                const response = await Axios({
+                    method: 'PATCH',
+                    url: `http://localhost:3000/api/todo/markAsDone/${id}`,
+                    data: {
+                        done: value 
+                    },
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    withCredentials: true
+                });
+                const tasks = this.state.tasks.map((task) => {
+                    if (task._id === id) {
+                        return {
+                            ...task, 
+                            done: value
+                        }
+                    }
+                    return task;
+                });
+
+                this.setState({
+                    ...this.state,
+                    tasks: tasks
+                });
+            } catch (e) {
+                alert(e.message);
+                return;
+            }
+    }
+
+    _viewTask = (task, _id, done) => {
+        return (
+            <>
+                <Col xs={2} className="todo-mark-as-done">
+                    <Form.Check type="checkbox" checked={done} name="markAsDone" onChange={(e) => {this.markAsDone(_id, e.target.checked)}}/>
+                </Col>
+                <Col className={done ? 'todo-done': ''} onDoubleClick={() => { this.setState({ editable: _id, editableTask: task }) }} xs={6}>
+                    {task}
+                </Col>
+                <Col xs={4}>
+                    <Button variant="danger" size="sm" block onClick={() => this.handleDeleteTask(_id)}>Delete</Button>
+                </Col>
+            </>
+        )
+    }
+
+    _editTask = (task, _id) => {
+        return (
+            <>
+                <Col onDoubleClick={() => { this.setState({ editable: _id }) }} xs={8}>
+                    <Form.Control name="editableTask" placeholder="Call Fransiska after meeting" onChange={(e) => this.handleChange(e)} value={this.state.editableTask}></Form.Control>
+                </Col>
+                <Col xs={4}>
+                    <Button variant="primary" size="sm" block onClick={() => this.handleUpdateTask(_id)}>Update</Button>
+                </Col>
+            </>
+        )
     }
 
     render() {
@@ -79,17 +229,12 @@ class TodoPage extends Component {
                                                         </Row>
                                                     </Card>
                                                 </Col>
-                                                {this.state.tasks.map((task, index) => {
+                                                {this.state.tasks.map(({ task, _id, done }, index) => {
                                                     return (
-                                                        <Col xs={12} className="text-left mt-1 mb-1" key={index}>
+                                                        <Col xs={12} className="text-left mt-1 mb-1" key={_id}>
                                                             <Card className="p-3">
                                                                 <Row className="align-items-center justify-content-center">
-                                                                    <Col xs={8}>
-                                                                        {task}
-                                                                    </Col>
-                                                                    <Col xs={4}>
-                                                                        <Button variant="danger" size="sm" block onClick={() => this.handleDeleteTask(index)}>Delete</Button>
-                                                                    </Col>
+                                                                    {this.state.editable === _id ? this._editTask(task, _id) : this._viewTask(task, _id, done)}
                                                                 </Row>
                                                             </Card>
                                                         </Col>

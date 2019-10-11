@@ -33,6 +33,7 @@ export default function ProtectedRoute(ComponentToProtect) {
                     }
                 })
                 .catch(err => {
+                    cookies.remove('token');
                     this.setState({ loading: false, redirect: true });
                 });
         }
