@@ -38,7 +38,7 @@ class LoginPage extends Component {
     }
 
     redirectToRegisterPage() {
-        return <Redirect to="/register" />
+        this.props.history.push('/register');
     }
 
     render() {
